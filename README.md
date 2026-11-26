@@ -8,8 +8,6 @@ Claude Code での開発に使っている、個人的な便利ツールの置�
 > Skills are included for overview, planning, handover (resume after `/clear`), starting a line and closing a sprint.
 > The documents are written in Japanese. See [teamkit/README.md](teamkit/README.md).
 
-![teamkit の作業計画の図（架空の例）](images/teamkit-overview.png)
-
 ## 技術スタック
 
 - Python 3.9 以上（標準ライブラリだけ。pip で入れるものはない）
