@@ -14,6 +14,7 @@
 | :--- | :--- |
 | `tasktree.py` | 全体像の部品。`python3 teamkit/tasktree.py TASK.md --text`（全体像）・`--plan`（計画）・`--html`（図）・`--list`（絞った一覧）。読むだけで、TASK.md を書き換えない |
 | `values.py` | 値の表 `.claude/teamkit.md` を読む部品。スキルのスクリプトが使う。`python3 teamkit/values.py` で全部の値を出す |
+| `docs/concept.md` | 設計の考え方（なぜツリーと composite か、状態を1か所に書く理由、トレードオフ）。ほかの文書の芯 |
 | `docs/taskmd.md` | TASK.md の型の要求（行・番号・前提・日付・束、名前と番号の決まり）。型の正 |
 | `docs/views.md` | 全体像の見え方（部品が TASK.md から出すもの、状態、空き、文字の全体像と計画、図、絞り込み）。見え方の正 |
 | `docs/roles.md` | 体制の形（部とライン、人とのやりとり、標準の流れ、持ち場の分離）と用語 |
@@ -37,10 +38,11 @@ teamkit のスキルは次の5つ。Claude Code が読む `.claude/skills/` に�
 
 ## 読む順番
 
-1. `docs/roles.md`（誰が何をするか、用語）
-2. `docs/taskmd.md`（TASK.md の書き方）と `templates/README.md`（ひな形の使い方）
-3. ラインを動かすなら `docs/line_rules.md` と `docs/verify.md`
-4. 導入するなら `docs/install.md`
+1. `docs/concept.md`（設計の考え方）
+2. `docs/roles.md`（誰が何をするか、用語）
+3. `docs/taskmd.md`（TASK.md の書き方）と `templates/README.md`（ひな形の使い方）
+4. ラインを動かすなら `docs/line_rules.md` と `docs/verify.md`
+5. 導入するなら `docs/install.md`
 
 ## 導入したリポジトリに書くもの
 
