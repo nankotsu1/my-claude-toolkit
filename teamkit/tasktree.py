@@ -412,7 +412,8 @@ def tree(path, holders=None, depth=DEPTH, got=None, _seen=None, _level=0, base=N
     束の印は枝から求める（束の行に書いた印は読まない）: 枝に行があって全部済みなら done、枝に [/] か [x] があれば
     doing、ほかは todo。子の持ち手が人を待っていれば（holders。holder_state）、済んでいない束は wait（✋）。枝に ✋ の
     行（孫の束）があれば束も wait にし、"wait" を合わせる。got: path の rows を呼ぶ側が持っていれば、それを使う。
-    TASK.md がなければ None。"""
+    束でたどった子の TASK.md の、どの束にも入らない済んでいない行は、件数と場所を "outside"（[{"path", "count"}]。
+    孫の分も上げる）に。中身は出さない（teamkit/docs/views.md の2章）。TASK.md がなければ None。"""
     me = os.path.realpath(task_path(path))
     r = copy.deepcopy(got) if got is not None else rows(path)
     if r is None:
@@ -444,14 +445,22 @@ def tree(path, holders=None, depth=DEPTH, got=None, _seen=None, _level=0, base=N
             sub = subs[child]
             ln["kids"] = {"path": show_path(ln["to"]), "source": (sub or {}).get("source", ""),
                           "title": (sub or {}).get("title", ""), "head": (sub or {}).get("head", ""), "lines": []}
+    outside = []        # 束でたどった子の TASK.md の、どの束にも入らない済んでいない行の件数と場所（孫の分も上げる）
     for child, sub in subs.items():
         mine = [ln for ln in r["lines"] if ln.get("kids") is not None and not ln.get("loop")
                 and os.path.realpath(task_path(ln["dir"])) == child]
+        stray = 0
         for i, k in enumerate((sub or {}).get("lines") or []):
             k["ord"] = i
             owner = max((ln for ln in mine if in_branch(k["no"], ln["no"])), key=lambda ln: len(ln["no"]), default=None)
             if owner is not None:
                 owner["kids"]["lines"].append(k)
+            elif k["mark"] != "done":
+                stray += 1
+        if stray and mine:
+            outside.append({"path": mine[0]["kids"]["path"], "count": stray})
+        outside += (sub or {}).get("outside") or []
+    r["outside"] = outside
     for ln in r["lines"]:
         if not ln.get("dir"):
             continue
@@ -1751,13 +1760,16 @@ def list_html(got, title="", terms="", issue_url=""):
 def text(t, all=False, title=True):
     """ツリー（tree の結果）を Markdown の箇条書きにする。1行目は TASK.md の見出し、続いて行ごとに
     印・文面・進み・Issue。束は枝の行を字下げする。済んだ行は「済 n 件」の1行にまとめる（all なら全部）。
-    番号のない行があれば、終わりに「番号のない行 n 件（数えない）」。"""
+    番号のない行があれば、終わりに「番号のない行 n 件（数えない）」。束の外の行があれば、子の TASK.md ごとに
+    「⚠ 束の外の行 n 件（場所）」。"""
     out = []
     if title:
         out.append("# " + (t.get("title") or t.get("head") or "TASK.md"))
     block(t.get("lines") or [], 0, all, out)
     if t.get("unnumbered"):
         out.append(f"- 番号のない行 {t['unnumbered']} 件（数えない）")
+    for o in t.get("outside") or []:
+        out.append(f"- ⚠ 束の外の行 {o['count']} 件（{o['path']}）")
     return "\n".join(out) + "\n"
 
 

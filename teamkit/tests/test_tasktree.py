@@ -278,6 +278,21 @@ class BranchTest(unittest.TestCase):
         self.assertEqual(sorted(b["tag"] for b in g["boxes"] if b["lane"] == lane_of(g, "self")["id"]), ["M1"])
         self.assertEqual(len(lane_of(g, "folder", "S041")["done"] + lane_of(g, "folder", "S041")["boxes"]), 3)  # 束は1つだけ
 
+    def test_rows_outside_bundles_are_counted(self):
+        """子が束の番号に続けずに足した済んでいない行は、束に入れず、文字の全体像の終わりに子の TASK.md ごとの件数と
+        場所だけ（孫の分も根まで上げる。済んだ行は数えない）。計画には出さない。"""
+        self.repo.put(".worktrees/Req", REQ + "- [ ] REQ-9 部が足した仕事\n- [x] REQ-8 済んだ別の依頼\n")
+        self.repo.put(".worktrees/REQ-4-2", "# REQ-4-2: 比べる\n\n## タスク\n- [ ] REQ-4-2-1 候補を出す\n"
+                      "- [ ] X-1 部下が足した仕事\n- [/] X-2 もう1つ\n")
+        t = T.link(T.tree(str(self.repo.root)))
+        self.assertEqual(t["outside"], [{"path": ".worktrees/Req/TASK.md", "count": 1},
+                                        {"path": ".worktrees/REQ-4-2/TASK.md", "count": 2}])
+        out = T.text(t)
+        self.assertTrue(out.endswith("- ⚠ 束の外の行 1 件（.worktrees/Req/TASK.md）\n"
+                                     "- ⚠ 束の外の行 2 件（.worktrees/REQ-4-2/TASK.md）\n"), out)
+        self.assertNotIn("REQ-9", out)
+        self.assertNotIn("X-1", T.plan_text(T.plan(t), t["head"]))
+
     def test_branch_option_reads_one_branch(self):
         """branch を渡すと、その TASK.md のその枝の行だけ（図で束に入るとき）。"""
         t = T.tree(str(self.repo.root / ".worktrees/Req"), branch="REQ-4")
